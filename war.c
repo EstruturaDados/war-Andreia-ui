@@ -1,59 +1,67 @@
 #include <stdio.h>
 #include <string.h>
-
-#define MAX_TERRITORIOS 5
-#define MAX_NOME 50
-#define MAX_COR 30
-
-// Definição da struct
 typedef struct {
-    char nome[MAX_NOME];
-    char corExercito[MAX_COR];
+    int id;
     int tropas;
+    int conquistado; // 0 = não, 1 = sim
 } Territorio;
+Territorio* criarTerritorios(int n) {
+    Territorio* t = (Territorio*) calloc(n, sizeof(Territorio));
+    for (int i = 0; i < n; i++) {
+        t[i].id = i + 1;
+        t[i].tropas = 5; // valor inicial
+        t[i].conquistado = 0;
+    }
+    return t;
+}
+void batalha(Territorio* atacante, Territorio* defensor) {
+    int dadoAtq = rand() % 6 + 1; // 1 a 6
+    int dadoDef = rand() % 6 + 1;
 
-// Função auxiliar para remover o '\n' do fgets
-void removerQuebraLinha(char *str) {
-    size_t len = strlen(str);
-    if (len > 0 && str[len - 1] == '\n') {
-        str[len - 1] = '\0';
+    printf("Atacante (%d tropas) rolou: %d\n", atacante->tropas, dadoAtq);
+    printf("Defensor (%d tropas) rolou: %d\n", defensor->tropas, dadoDef);
+
+    if (dadoAtq >= dadoDef) {
+        defensor->tropas--;
+        printf("Defensor perdeu 1 tropa!\n");
+        if (defensor->tropas <= 0) {
+            defensor->conquistado = 1;
+            printf("Território %d foi conquistado!\n", defensor->id);
+        }
+    } else {
+        printf("Defensor resistiu ao ataque!\n");
     }
 }
-
 int main() {
-    Territorio territorios[MAX_TERRITORIOS];
-    
-    printf("=== Cadastro Inicial dos Territórios ===\n\n");
+    srand(time(NULL));
+    int n = 5;
+    Territorio* territorios = criarTerritorios(n);
 
-    for (int i = 0; i < MAX_TERRITORIOS; i++) {
-        printf("Território %d:\n", i + 1);
+    int atq, def;
+    while (1) {
+        printf("\nEscolha atacante (1-5) e defensor (1-5): ");
+        scanf("%d %d", &atq, &def);
 
-        // Nome do território
-        printf("Digite o nome: ");
-        fgets(territorios[i].nome, MAX_NOME, stdin);
-        removerQuebraLinha(territorios[i].nome);
+        if (atq < 1 || atq > n || def < 1 || def > n || atq == def) {
+            printf("Entrada inválida!\n");
+            continue;
+        }
 
-        // Cor do exército
-        printf("Digite a cor do exército: ");
-        fgets(territorios[i].corExercito, MAX_COR, stdin);
-        removerQuebraLinha(territorios[i].corExercito);
+        batalha(&territorios[atq-1], &territorios[def-1]);
 
-        // Número de tropas
-        printf("Digite o número de tropas: ");
-        scanf("%d", &territorios[i].tropas);
-        getchar(); // consome o \n deixado pelo scanf
-
-        printf("\n");
+        // Mostrar estado atual
+        for (int i = 0; i < n; i++) {
+            printf("Território %d: %d tropas %s\n",
+                   territorios[i].id,
+                   territorios[i].tropas,
+                   territorios[i].conquistado ? "(CONQUISTADO)" : "");
+        }
     }
 
-    // Exibição do estado atual do mapa
-    printf("\n=== Estado Atual do Mapa ===\n\n");
-    for (int i = 0; i < MAX_TERRITORIOS; i++) {
-        printf("Território %d:\n", i + 1);
-        printf("  Nome: %s\n", territorios[i].nome);
-        printf("  Cor do Exército: %s\n", territorios[i].corExercito);
-        printf("  Tropas: %d\n\n", territorios[i].tropas);
-    }
-
+    free(territorios);
     return 0;
 }
+
+
+
+
