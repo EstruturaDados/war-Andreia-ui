@@ -1,67 +1,57 @@
 #include <stdio.h>
-#include <string.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define MAX_TERRITORIOS 10
+#define EXERCITO_VERDE 1
+#define EXERCITO_AZUL 2
+
 typedef struct {
-    int id;
+    int dono;
     int tropas;
-    int conquistado; // 0 = não, 1 = sim
 } Territorio;
-Territorio* criarTerritorios(int n) {
-    Territorio* t = (Territorio*) calloc(n, sizeof(Territorio));
+void inicializarTerritorios(Territorio territorios[], int n);
+void mostrarMapa(const Territorio territorios[], int n);
+void atacar(Territorio territorios[], int n);
+int verificarMissao(const Territorio territorios[], int n, int missao);
+int sortearMissao();
+void menuPrincipal(Territorio territorios[], int n, int missao);
+void inicializarTerritorios(Territorio territorios[], int n) {
     for (int i = 0; i < n; i++) {
-        t[i].id = i + 1;
-        t[i].tropas = 5; // valor inicial
-        t[i].conquistado = 0;
+        territorios[i].dono = (i % 2 == 0) ? EXERCITO_VERDE : EXERCITO_AZUL;
+        territorios[i].tropas = rand() % 5 + 1;
     }
-    return t;
 }
-void batalha(Territorio* atacante, Territorio* defensor) {
-    int dadoAtq = rand() % 6 + 1; // 1 a 6
-    int dadoDef = rand() % 6 + 1;
+int sortearMissao() {
+    int missao = rand() % 2; 
+    return missao; // 0 = destruir exército verde, 1 = conquistar 3 territórios
+}
 
-    printf("Atacante (%d tropas) rolou: %d\n", atacante->tropas, dadoAtq);
-    printf("Defensor (%d tropas) rolou: %d\n", defensor->tropas, dadoDef);
-
-    if (dadoAtq >= dadoDef) {
-        defensor->tropas--;
-        printf("Defensor perdeu 1 tropa!\n");
-        if (defensor->tropas <= 0) {
-            defensor->conquistado = 1;
-            printf("Território %d foi conquistado!\n", defensor->id);
+int verificarMissao(const Territorio territorios[], int n, int missao) {
+    if (missao == 0) {
+        for (int i = 0; i < n; i++) {
+            if (territorios[i].dono == EXERCITO_VERDE) return 0;
         }
-    } else {
-        printf("Defensor resistiu ao ataque!\n");
+        return 1; // missão cumprida
+    } else if (missao == 1) {
+        int conquistas = 0;
+        for (int i = 0; i < n; i++) {
+            if (territorios[i].dono == EXERCITO_AZUL) conquistas++;
+        }
+        return conquistas >= 3;
     }
+    return 0;
 }
 int main() {
     srand(time(NULL));
-    int n = 5;
-    Territorio* territorios = criarTerritorios(n);
+    Territorio territorios[MAX_TERRITORIOS];
+    inicializarTerritorios(territorios, MAX_TERRITORIOS);
 
-    int atq, def;
-    while (1) {
-        printf("\nEscolha atacante (1-5) e defensor (1-5): ");
-        scanf("%d %d", &atq, &def);
+    int missao = sortearMissao();
+    printf("Missão sorteada: %s\n", missao == 0 ? "Destruir o exército Verde" : "Conquistar 3 territórios");
 
-        if (atq < 1 || atq > n || def < 1 || def > n || atq == def) {
-            printf("Entrada inválida!\n");
-            continue;
-        }
+    mostrarMapa(territorios, MAX_TERRITORIOS);
+    menuPrincipal(territorios, MAX_TERRITORIOS, missao);
 
-        batalha(&territorios[atq-1], &territorios[def-1]);
-
-        // Mostrar estado atual
-        for (int i = 0; i < n; i++) {
-            printf("Território %d: %d tropas %s\n",
-                   territorios[i].id,
-                   territorios[i].tropas,
-                   territorios[i].conquistado ? "(CONQUISTADO)" : "");
-        }
-    }
-
-    free(territorios);
     return 0;
 }
-
-
-
-
